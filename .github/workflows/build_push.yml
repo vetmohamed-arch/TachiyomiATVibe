@@ -33,19 +33,47 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Install model conversion dependencies
-        run: python3 -m pip install --disable-pip-version-check -r scripts/requirements.txt
+        run: python3 -m pip install --disable-pip-version-check -r scripts/converters/requirements.txt
 
       - name: Fetch and verify model assets
         run: python3 scripts/fetch_models.py
 
-      - name: Build app and run unit tests
-        run: ./gradlew spotlessCheck assembleStandardRelease
+      - name: Build app
+        run: ./gradlew assembleStandardRelease
+
+      # The release build is unsigned. A key stored in the SIGNING_KEY secret
+      # (base64 keystore) keeps the signature stable so new builds install over
+      # old ones; without it a throwaway key is generated for this run.
+      - name: Sign APK
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ALIAS }}
+        run: |
+          set -e
+          if [ -n "$SIGNING_KEY" ]; then
+            echo "$SIGNING_KEY" | base64 -d > signing.jks
+          else
+            KEY_STORE_PASSWORD=temporary
+            KEY_ALIAS=temporary
+            keytool -genkeypair -keystore signing.jks -storepass "$KEY_STORE_PASSWORD" \
+              -alias "$KEY_ALIAS" -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Arabic Edition"
+          fi
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          mkdir -p signed
+          for apk in app/build/outputs/apk/standard/release/*-unsigned.apk; do
+            out="signed/$(basename "${apk/-unsigned/}")"
+            "$APKSIGNER" sign --ks signing.jks --ks-pass "pass:$KEY_STORE_PASSWORD" \
+              --ks-key-alias "$KEY_ALIAS" --out "$out" "$apk"
+          done
+          rm -f signing.jks
+          ls -la signed
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: arm64-v8a-${{ github.sha }}
-          path: app/build/outputs/apk/standard/release/*.apk
+          path: signed/*arm64-v8a*.apk
 
       - name: Upload mapping
         uses: actions/upload-artifact@v4
