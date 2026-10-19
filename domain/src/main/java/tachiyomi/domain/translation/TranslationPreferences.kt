@@ -17,7 +17,7 @@ enum class TranslationEngineCategory { STANDARD, AI_MODEL }
  * via [translationDeeplApiKey]). Keeps the list scalable for future providers
  * such as Microsoft or Yandex.
  */
-enum class StandardEngine { MLKIT, GOOGLE, DEEPL }
+enum class StandardEngine { MLKIT, GOOGLE, DEEPL, MICROSOFT }
 
 /**
  * AI model translators. Each provider has its own API key and model
@@ -79,7 +79,7 @@ class TranslationPreferences(
      * buttons, auto mode). Defaults to false: the Translation settings sheet
      * exposes a toggle, so translation is opt-in.
      */
-    fun translationEnabled() = preferenceStore.getBoolean("translation_enabled", false)
+    fun translationEnabled() = preferenceStore.getBoolean("translation_enabled", true)
 
     /**
      * Show a read-only confirmation popup (current source/target language,
@@ -105,8 +105,8 @@ class TranslationPreferences(
      */
     fun autoTranslatePrefetchCount() = preferenceStore.getInt("auto_translate_prefetch_count", 2)
 
-    fun translateFromLanguage() = preferenceStore.getString("translate_language_from", "CHINESE")
-    fun translateToLanguage() = preferenceStore.getString("translate_language_to", "ENGLISH")
+    fun translateFromLanguage() = preferenceStore.getString("translate_language_from", "KOREAN")
+    fun translateToLanguage() = preferenceStore.getString("translate_language_to", "ARABIC")
     fun translationFont() = preferenceStore.getInt("translation_font", 0)
 
     fun translationInpaintingMode() = preferenceStore.getString("translation_inpainting_mode", "FAST")
@@ -173,7 +173,7 @@ class TranslationPreferences(
         "translation_engine_category",
         TranslationEngineCategory.STANDARD,
     )
-    fun translationStandardEngine() = preferenceStore.getEnum("translation_standard_engine", StandardEngine.MLKIT)
+    fun translationStandardEngine() = preferenceStore.getEnum("translation_standard_engine", StandardEngine.MICROSOFT)
     fun translationAiEngine() = preferenceStore.getEnum("translation_ai_engine", AiEngine.GEMINI)
 
     /**

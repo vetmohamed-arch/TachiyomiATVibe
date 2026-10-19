@@ -36,6 +36,7 @@ import eu.kanade.tachiyomi.data.coil.MangaKeyer
 import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.di.AppModule
+import eu.kanade.tachiyomi.extension.BundledSourcesInstaller
 import eu.kanade.tachiyomi.di.PreferenceModule
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
@@ -164,6 +165,14 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         }
 
         initializeMigrator()
+
+        scope.launch {
+            try {
+                BundledSourcesInstaller(this@App).installIfNeeded()
+            } catch (e: Exception) {
+                logcat(LogPriority.ERROR, e) { "Bundled sources bootstrap failed" }
+            }
+        }
 
         if (BuildConfig.DEBUG) {
             // TachiyomiAT ( §3.5): automatic QNN diagnostics no longer run at

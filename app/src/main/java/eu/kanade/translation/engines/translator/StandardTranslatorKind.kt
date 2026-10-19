@@ -2,6 +2,7 @@ package eu.kanade.translation.engines.translator
 import eu.kanade.translation.engines.translator.providers.DeepLTranslator
 import eu.kanade.translation.engines.translator.providers.GoogleTranslator
 import eu.kanade.translation.engines.translator.providers.MLKitTranslator
+import eu.kanade.translation.engines.translator.providers.MicrosoftTranslator
 import eu.kanade.translation.model.TextRecognizerLanguage
 import eu.kanade.translation.model.TextTranslatorLanguage
 import tachiyomi.core.common.preference.Preference
@@ -10,12 +11,13 @@ import tachiyomi.domain.translation.TranslationPreferences
 
 /**
  * Built-in translators that do not use dynamic LLM model selection. Most require
- * neither API keys nor model ids (Google Translate, on-device ML Kit); DeepL is
+ * neither API keys nor model ids (Google Translate, Microsoft Translator, on-device ML Kit); DeepL is
  * the exception and needs an API key (read from [TranslationPreferences]).
  */
 enum class StandardTranslatorKind(val label: String) {
     MLKIT("MlKit (On Device)"),
     GOOGLE("Google Translate"),
+    MICROSOFT("Microsoft Translator (Edge)"),
     DEEPL("DeepL"),
     ;
 
@@ -26,6 +28,7 @@ enum class StandardTranslatorKind(val label: String) {
     ): TextTranslator = when (this) {
         MLKIT -> MLKitTranslator(fromLang, toLang)
         GOOGLE -> GoogleTranslator(fromLang, toLang)
+        MICROSOFT -> MicrosoftTranslator(fromLang, toLang)
         DEEPL -> {
             // Fail fast on a missing key. Under the strict no-fallback policy this surfaces as a
             // FAILED page so the user configures the key instead of silently getting the wrong engine.
